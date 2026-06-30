@@ -76,6 +76,21 @@ The app writes debug audio files to the project root when generating TTS:
 
 If you can't hear audio, check these files and the Streamlit server logs for lines starting with `GroqTTS:`. You can play these files locally to verify audio generation.
 
+## Webcam on Streamlit Cloud
+
+If the camera spinner never connects and you see a message about STUN/TURN settings, the browser can reach the site over HTTPS but WebRTC cannot establish a media path through the network. Streamlit Community Cloud often needs a TURN server, not just STUN.
+
+Set `WEBRTC_ICE_SERVERS_JSON` in your Streamlit Cloud secrets with one or more ICE servers, for example the Twilio TURN response or another TURN provider:
+
+```json
+[
+	{"urls": ["stun:stun.l.google.com:19302"]},
+	{"urls": ["turn:your-turn.example.com:3478"], "username": "user", "credential": "pass"}
+]
+```
+
+If you only want to change the STUN server, set `WEBRTC_STUN_SERVER`. Otherwise, leave both unset and the app will keep using Google STUN by default.
+
 ## Git / Privacy
 
 - `.gitignore` already excludes `.env` and the debug audio files. Do not commit `.env`.

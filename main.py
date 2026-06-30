@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import time
 import warnings
+import json
 import pandas as pd
 from dotenv import load_dotenv
 from groq import Groq
@@ -26,6 +27,20 @@ from services.persistence.exercise_repository import get_users_exercises
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 os.environ.setdefault("GLOG_minloglevel", "2")
 warnings.filterwarnings("ignore", message=r"SymbolDatabase\.GetPrototype\(\) is deprecated.*")
+
+
+def get_rtc_configuration():
+    ice_servers_json = os.getenv("WEBRTC_ICE_SERVERS_JSON")
+    if ice_servers_json:
+        try:
+            ice_servers = json.loads(ice_servers_json)
+            if isinstance(ice_servers, list) and ice_servers:
+                return {"iceServers": ice_servers}
+        except Exception:
+            pass
+
+    stun_server = os.getenv("WEBRTC_STUN_SERVER", "stun:stun.l.google.com:19302")
+    return {"iceServers": [{"urls": [stun_server]}]}
 
 def main():
     load_dotenv(os.path.join(os.getcwd(), ".env"))
@@ -199,7 +214,7 @@ def main():
                 key="exercise-analysis",
                 mode=WebRtcMode.SENDRECV,
                 video_processor_factory=VideoProcessorClass,
-                rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+                rtc_configuration=get_rtc_configuration(),
                 media_stream_constraints={
                     "video": True,
                     "audio": False
