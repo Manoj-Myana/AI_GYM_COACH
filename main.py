@@ -14,7 +14,12 @@ from services.ui.style_loader import load_css, inject_local_font, inject_webrtc_
 from services.coaching.llm import LLMCoach
 from services.coaching.tts import GroqTTS
 from services.coaching.voice_pipeline import VoicePipeline, autoplay_audio, prime_silent_wav
-from services.vision.exercise_video_processor import VideoProcessorClass
+try:
+    from services.vision.exercise_video_processor import VideoProcessorClass
+    VIDEO_PROCESSOR_IMPORT_ERROR = None
+except Exception as exc:
+    VideoProcessorClass = None
+    VIDEO_PROCESSOR_IMPORT_ERROR = exc
 from services.tracking.metrics import sync_metrics_update
 from services.persistence.exercise_repository import get_users_exercises
 
@@ -182,37 +187,45 @@ def main():
             unsafe_allow_html=True,
         )
     else:
-        context = webrtc_streamer(
-            key="exercise-analysis",
-            mode=WebRtcMode.SENDRECV,
-            video_processor_factory=VideoProcessorClass,
-            rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-            media_stream_constraints={
-                "video": True,
-                "audio": False
-            },
-            async_processing=True
-        )
-        sync_metrics_update(context)
+        if VideoProcessorClass is None:
+            st.error(
+                "Video processing is unavailable in this deployment because the OpenCV/MediaPipe stack failed to import. "
+                "Please check the Streamlit Cloud logs and ensure the OpenCV wheels are installed correctly."
+            )
+            if VIDEO_PROCESSOR_IMPORT_ERROR is not None:
+                st.caption(str(VIDEO_PROCESSOR_IMPORT_ERROR))
+        else:
+            context = webrtc_streamer(
+                key="exercise-analysis",
+                mode=WebRtcMode.SENDRECV,
+                video_processor_factory=VideoProcessorClass,
+                rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+                media_stream_constraints={
+                    "video": True,
+                    "audio": False
+                },
+                async_processing=True
+            )
+            sync_metrics_update(context)
 
-        audio_to_play = st.session_state.get("audio_to_play")
-        coach_feedback = st.session_state.get("coach_feedback")
+            audio_to_play = st.session_state.get("audio_to_play")
+            coach_feedback = st.session_state.get("coach_feedback")
 
-        if audio_to_play:
-            # Attempt to autoplay the audio. If the browser was primed by the
-            # Start Session click, this should play automatically; otherwise
-            # the browser may still block it.
-            try:
-                autoplay_audio(audio_to_play)
-            except Exception:
-                pass
-            st.session_state.audio_to_play = None
-            st.session_state.coach_feedback = None
+            if audio_to_play:
+                # Attempt to autoplay the audio. If the browser was primed by the
+                # Start Session click, this should play automatically; otherwise
+                # the browser may still block it.
+                try:
+                    autoplay_audio(audio_to_play)
+                except Exception:
+                    pass
+                st.session_state.audio_to_play = None
+                st.session_state.coach_feedback = None
 
-        if context.state.playing:
-            time.sleep(0.25)
-            st.rerun()
-        inject_webrtc_styles()
+            if context.state.playing:
+                time.sleep(0.25)
+                st.rerun()
+            inject_webrtc_styles()
     st.divider()
     
     st.markdown("#### Workout History")
