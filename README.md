@@ -1,113 +1,205 @@
-# AI_GYM_COACH
+# 🏋️ AI Gym Coach
 
-AI_GYM_COACH is a Streamlit-based real-time exercise coach that detects poses from a webcam feed and provides proactive AI voice feedback during workouts. It uses an on-device pose pipeline with optional Groq LLM and Groq TTS (falls back to gTTS) for spoken coaching.
+An AI-powered real-time fitness coaching application that uses computer vision and pose estimation to analyze exercise form, count repetitions, track workout progress, and provide live voice feedback. Built with **Streamlit**, **MediaPipe**, and **Groq AI**, the application acts as your personal virtual gym trainer.
 
-## Features
+## 🚀 Live Demo
 
-- Real-time pose detection and exercise-specific metrics
-- Proactive AI coaching messages (voice + text)
-- Groq LLM/TTS integration with local fallbacks
-- Session persistence and workout history
-- Lightweight: runs locally with Streamlit and WebRTC
+👉 **Try the application here:**  
+https://ai-gym-coach-realtime12.streamlit.app/
 
-## Requirements
+---
 
-- Python 3.10+ recommended
-- Windows / macOS / Linux
-- Optional: `ffmpeg` on PATH (used for audio transcoding if needed)
+## 📖 Project Overview
 
-## Quick start
+AI Gym Coach uses your webcam to monitor body movements in real time and evaluate exercise posture. It detects pose landmarks using MediaPipe, tracks repetitions and sets, and provides intelligent coaching feedback through AI-generated text and speech.
 
-1. Create and activate a virtual environment
+The application supports browser-based deployment using **WebRTC**, making it accessible without installing any additional software.
+
+---
+
+## ✨ Features
+
+- 🎥 Real-time webcam-based exercise tracking
+- 🤸 Accurate pose detection using MediaPipe
+- 🔢 Automatic repetition and set counting
+- ✅ Live form correction and posture analysis
+- 🗣️ AI-generated coaching with voice feedback
+- 📊 Workout history and session tracking
+- 🤖 Groq LLM integration for personalized coaching
+- 🔊 Automatic fallback to gTTS when required
+- 🎨 Modern Streamlit interface with custom CSS
+- 🌐 Browser-based deployment using WebRTC
+
+---
+
+## 🏃 Supported Exercises
+
+- Squats
+- Push-ups
+- Biceps Curls
+- Shoulder Press
+- Lunges
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+- Streamlit
+- HTML/CSS
+
+### Backend
+- Python 3.10+
+
+### AI & Computer Vision
+- MediaPipe
+- OpenCV
+- NumPy
+- PyAV
+
+### Machine Learning & AI
+- Groq API
+- gTTS
+
+### Data Processing
+- Pandas
+
+### Utilities
+- python-dotenv
+- streamlit-webrtc
+
+---
+
+## 📂 Project Structure
+
+```
+AI_GYM_COACH/
+│
+├── main.py
+├── style.css
+├── requirements.txt
+├── .env
+│
+├── services/
+│   ├── coaching/
+│   │   ├── llm.py
+│   │   ├── tts.py
+│   │   └── voice_pipeline.py
+│   │
+│   └── vision/
+│       └── exercise_video_processor.py
+│
+└── workout_history/
+```
+
+---
+
+## ⚙️ Installation
+
+### Clone the repository
+
+```bash
+git clone https://github.com/Manoj-Myana/AI_GYM_COACH.git
+
+cd AI_GYM_COACH
+```
+
+### Create a virtual environment
 
 ```bash
 python -m venv .venv
-# Windows
-.\.venv\Scripts\activate
-# macOS / Linux
+```
+
+### Activate the environment
+
+**Windows**
+
+```bash
+.venv\Scripts\activate
+```
+
+**macOS/Linux**
+
+```bash
 source .venv/bin/activate
 ```
 
-2. Install dependencies
+### Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Set up environment variables
+---
 
-Create a `.env` file in the project root and add your Groq API key (optional):
+## 🔑 Environment Variables
 
-```
+Create a `.env` file in the project root.
+
+```env
 GROQ_API_KEY=your_groq_api_key_here
 ```
 
-Notes:
-- If `GROQ_API_KEY` is not set or the Groq client fails, the app uses local fallbacks (simple template LLM and gTTS) so voice feedback still works.
-- Do NOT commit your `.env` to version control. A `.gitignore` has been added to exclude `.env` and the debug audio files.
+> **Note:** If no Groq API key is provided, the application automatically uses local fallback services for AI coaching and text-to-speech.
 
-4. Run the app
+---
+
+## ▶️ Run the Application
 
 ```bash
 streamlit run main.py
 ```
 
-Open the Local URL printed by Streamlit in your browser.
+Open the local URL displayed by Streamlit in your browser.
 
-## How voice feedback works (important)
+---
 
-- The app uses a short, silent audio priming clip when you click **Start Session**. This user gesture helps browsers allow subsequent audio autoplay.
-- When a coaching event occurs (set completed, workout complete, or detected form issue), the app requests TTS audio from Groq (preferred) or gTTS (fallback).
-- If the Groq response uses a non-PCM WAV format, the app attempts to transcode it with `ffmpeg` (if available) and returns a browser-friendly audio format.
+## 🎤 Voice Feedback
 
-If you do not hear audio automatically:
-- Make sure you clicked **Start Session** (this primes autoplay permissions).
-- Ensure your tab is not muted and system volume is up.
-- If Groq fails, the app will fall back to `gTTS` (requires internet) — check the saved debug files below.
+The application provides real-time spoken coaching during workouts.
 
-## Debugging and logs
+- AI-generated coaching using the Groq API
+- Automatic fallback to gTTS if Groq TTS is unavailable
+- Voice cues are played during exercise sessions to guide posture, repetitions, and workout completion
 
-The app writes debug audio files to the project root when generating TTS:
+---
 
-- `last_groq_audio.wav` — original Groq response (if present)
-- `last_groq_audio.mp3` — saved when Groq returned MP3 bytes
-- `last_groq_audio_converted.wav` — ffmpeg-converted (PCM) WAV when conversion succeeded
-- `last_gtts_audio.mp3` — gTTS fallback output
+## 📹 Webcam Support
 
-If you can't hear audio, check these files and the Streamlit server logs for lines starting with `GroqTTS:`. You can play these files locally to verify audio generation.
+The application uses **WebRTC** for real-time webcam streaming.
 
-## Webcam on Streamlit Cloud
+For deployments on **Streamlit Community Cloud**, you may need to configure **STUN/TURN** servers if webcam connectivity issues occur.
 
-If the camera spinner never connects and you see a message about STUN/TURN settings, the browser can reach the site over HTTPS but WebRTC cannot establish a media path through the network. Streamlit Community Cloud often needs a TURN server, not just STUN.
+---
 
-Set `WEBRTC_ICE_SERVERS_JSON` in your Streamlit Cloud secrets with one or more ICE servers, for example the Twilio TURN response or another TURN provider:
+## 📁 Important Files
 
-```json
-[
-	{"urls": ["stun:stun.l.google.com:19302"]},
-	{"urls": ["turn:your-turn.example.com:3478"], "username": "user", "credential": "pass"}
-]
-```
+| File | Description |
+|------|-------------|
+| `main.py` | Main Streamlit application |
+| `exercise_video_processor.py` | Exercise detection and pose analysis |
+| `voice_pipeline.py` | Voice coaching pipeline |
+| `llm.py` | AI coaching logic |
+| `tts.py` | Text-to-Speech service |
+| `style.css` | Custom application styling |
 
-If you only want to change the STUN server, set `WEBRTC_STUN_SERVER`. Otherwise, leave both unset and the app will keep using Google STUN by default.
+---
 
-## Git / Privacy
+## 🤝 Contributing
 
-- `.gitignore` already excludes `.env` and the debug audio files. Do not commit `.env`.
-- If you accidentally pushed secrets to a remote, rotate them immediately and consider rewriting Git history.
+Contributions are welcome!
 
-## Development notes
+If you'd like to improve the project:
 
-- Main app: `main.py`
-- Core pipeline: `services/vision/exercise_video_processor.py`
-- Voice pipeline: `services/coaching/voice_pipeline.py`
-- LLM wrapper: `services/coaching/llm.py`
-- TTS wrapper: `services/coaching/tts.py`
+1. Fork the repository
+2. Create a new branch
+3. Commit your changes
+4. Submit a Pull Request
 
-## Contributing
+---
 
-Contributions welcome — open an issue or PR with a short description of the change.
+## 📄 License
 
-## License
+This project is intended for educational and portfolio purposes.
 
-Add your preferred license file or choose one before publishing.
+Feel free to use and modify it for learning.
