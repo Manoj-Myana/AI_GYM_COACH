@@ -30,7 +30,16 @@ warnings.filterwarnings("ignore", message=r"SymbolDatabase\.GetPrototype\(\) is 
 
 
 def get_rtc_configuration():
-    ice_servers_json = os.getenv("WEBRTC_ICE_SERVERS_JSON")
+    ice_servers_json = None
+
+    try:
+        ice_servers_json = st.secrets.get("WEBRTC_ICE_SERVERS_JSON")
+    except Exception:
+        ice_servers_json = None
+
+    if not ice_servers_json:
+        ice_servers_json = os.getenv("WEBRTC_ICE_SERVERS_JSON")
+
     if ice_servers_json:
         try:
             ice_servers = json.loads(ice_servers_json)
@@ -39,7 +48,14 @@ def get_rtc_configuration():
         except Exception:
             pass
 
-    stun_server = os.getenv("WEBRTC_STUN_SERVER", "stun:stun.l.google.com:19302")
+    try:
+        stun_server = st.secrets.get("WEBRTC_STUN_SERVER")
+    except Exception:
+        stun_server = None
+
+    if not stun_server:
+        stun_server = os.getenv("WEBRTC_STUN_SERVER", "stun:stun.l.google.com:19302")
+
     return {"iceServers": [{"urls": [stun_server]}]}
 
 def main():
